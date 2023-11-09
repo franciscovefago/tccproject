@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "builds": [{ "src": "path/to/your/django/app", "use": "@vercel/python" }],
+  "routes": [
+    { "handle": "filesystem" },
+    {
+      "src": "/(.*)",
+      "dest": "path/to/your/django/app/index.py"
+    }
+  ]
+}
