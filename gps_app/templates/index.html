@@ -1,0 +1,363 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+  <title>{{gps_data.name}}</title>
+  <link rel="stylesheet" href="{% static '/assets/bootstrap/css/bootstrap.min.css' %}">
+  <link rel="stylesheet" href="{% static '/assets/css/main.css' %}">
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i&amp;display=swap">
+  <link rel="stylesheet" href="{% static '/assets/fonts/fontawesome-all.min.css' %}">
+
+</head>
+
+<body id="page-top">
+  <div id="wrapper">
+    <nav class="navbar navbar-dark align-items-start sidebar sidebar-dark accordion bg-gradient-primary p-0">
+      <div class="container-fluid d-flex flex-column p-0"><a
+          class="navbar-brand d-flex justify-content-center align-items-center sidebar-brand m-0" href="#">
+          <div class="sidebar-brand-icon rotate-n-15"><i class="fas fa-hippo"></i></div>
+          <div class="sidebar-brand-text mx-3"><span>GPS-Tracker</span></div>
+        </a>
+        <hr class="sidebar-divider my-0">
+        <ul class="navbar-nav text-light" id="accordionSidebar">
+          <li class="nav-item"><a class="nav-link active" href="/"><i
+                class="fas fa-tachometer-alt"></i><span>{{gps_data.name}}</span></a></li>
+          <!-- <li class="nav-item"><a class="nav-link" href="/profile/"><i class="fas fa-user"></i><span>Profile</span></a>
+          </li>
+          <li class="nav-item"><a class="nav-link" href="/table/"><i class="fas fa-table"></i><span>Table</span></a>
+          </li>
+          <li class="nav-item"><a class="nav-link" href="/login/"><i
+                class="far fa-user-circle"></i><span>Login</span></a></li>
+          <li class="nav-item"><a class="nav-link" href="/register/"><i
+                class="fas fa-user-circle"></i><span>Register</span></a></li> -->
+        </ul>
+        <div class="text-center d-none d-md-inline"><button class="btn rounded-circle border-0" id="sidebarToggle"
+            type="button"></button></div>
+      </div>
+    </nav>
+    <div class="d-flex flex-column" id="content-wrapper">
+      <div id="content">
+        <nav class="navbar navbar-light navbar-expand bg-white shadow mb-4 topbar static-top">
+          <div class="container-fluid"><button class="btn btn-link d-md-none rounded-circle me-3" id="sidebarToggleTop"
+              type="button"><i class="fas fa-bars"></i></button>
+            
+            {% if notify %}
+            <div class="bg-danger" style="color: white; padding: 0.5rem; border-radius: 8px;">?? Movimenta��o
+              detectada! ??</div>
+            {% endif %}
+            {% if not inside %}
+            <div class="bg-danger" style="color: white; padding: 0.5rem; border-radius: 8px;">?? Dispositivo fora do cercado! ??</div>
+            {% endif %}
+            <ul class="navbar-nav flex-nowrap ms-auto">
+              
+            </ul>
+          </div>
+
+        </nav>
+        <div class="container-fluid">
+          <div class="d-sm-flex justify-content-between align-items-center mb-4">
+            <h3 class="text-dark mb-0">{{gps_data.name}}</h3>
+            <div class="btns d-flex" style="gap:1rem;">
+              <button class="btn btn-primary btn-sm d-none d-sm-inline-block" role="button" data-bs-toggle="modal"
+                data-bs-target="#changeNameModal"><i class="fas fa-pen fa-sm text-white-50 me-1"></i> Alterar Nome do
+                Dispositivo</button>
+              <a class="btn btn-dark btn-sm d-none d-sm-inline-block" href="{% url 'mapa' %}">
+                <i class="fas fa-wrench fa-sm text-white-50 me-1"></i> 
+                Configurar Cercado
+              </a>
+            </div>
+          </div>
+          <div class="modal fade" id="changeNameModal" tabindex="-1" role="dialog"
+            aria-labelledby="changeNameModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="changeNameModalLabel">Alterar Nome do Dispositivo</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                  </button>
+                </div>
+                <form id="changeNameForm" action="{% url 'update_device_name' %}" method="POST">
+                  {% csrf_token %}
+                  <div class="modal-body">
+                    <label for="newName">Novo nome:</label>
+                    <input type="text" name="name" id="newName" class="form-control" value="{{gps_data.name}}" required>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Alterar Nome</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+          <div class="modal fade" id="cercadoModal" tabindex="-1" role="dialog" aria-labelledby="cercadoModal"
+            aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document">
+              <div class="modal-content modal-lg">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="changeNameModalLabel">Configure um novo Cercado Virtual</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                  </button>
+                </div>
+                <form id="changeNameForm" action="{% url 'config_cercado' %}" method="POST">
+                  {% csrf_token %}
+                  <div class="modal-body">
+                    <div class="name-input mb-4">
+                      <label for="newName">Nome do cercado:</label>
+                      <input type="text" name="name" id="newName" class="form-control" value="{{gps_data.cercado.name}}|{{gps_data.cercado.id}}" required>
+                      <input type="hidden" name="id" value="{{gps_data.cercado.id}}" />
+                    </div>
+                    <div>Coordenadas do ponto 1:</div>
+                    <div class="d-flex mb-4" style="gap:1.5rem;">
+                      <div class="input">
+                        <label for="lat1">Latitude:</label>
+                        <input type="text" name="lat1" id="lat1" class="form-control" value="{{gps_data.cercado.lat1}}"
+                          required>
+                      </div>
+                      <div class="input">
+                        <label for="lon1">Longitude:</label>
+                        <input type="text" name="lon1" id="lon1" class="form-control" value="{{gps_data.cercado.lon1}}"
+                          required>
+                      </div>
+                    </div>
+                    <div>Coordenadas do ponto 2:</div>
+                    <div class="d-flex mb-4" style="gap:1.5rem;">
+                      <div class="input">
+                        <label for="lat2">Latitude:</label>
+                        <input type="text" name="lat2" id="lat2" class="form-control" value="{{gps_data.cercado.lat2}}"
+                          required>
+                      </div>
+                      <div class="input">
+                        <label for="lon2">Longitude:</label>
+                        <input type="text" name="lon2" id="lon2" class="form-control" value="{{gps_data.cercado.lon2}}"
+                          required>
+                      </div>
+                    </div>
+                    <div>Coordenadas do ponto 3:</div>
+                    <div class="d-flex mb-4" style="gap:1.5rem;">
+                      <div class="input">
+                        <label for="lat3">Latitude:</label>
+                        <input type="text" name="lat3" id="lat3" class="form-control" value="{{gps_data.cercado.lat3}}"
+                          required>
+                      </div>
+                      <div class="input">
+                        <label for="lon3">Longitude:</label>
+                        <input type="text" name="lon3" id="lon3" class="form-control" value="{{gps_data.cercado.lon3}}"
+                          required>
+                      </div>
+                    </div>
+                    <div>Coordenadas do ponto 4:</div>
+                    <div class="d-flex mb-4" style="gap:1.5rem;">
+                      <div class="input">
+                        <label for="lat4">Latitude:</label>
+                        <input type="text" name="lat4" id="lat4" class="form-control" value="{{gps_data.cercado.lat4}}"
+                          required>
+                      </div>
+                      <div class="input">
+                        <label for="lat4">Longitude:</label>
+                        <input type="text" name="lon4" id="lon4" class="form-control" value="{{gps_data.cercado.lon4}}"
+                          required>
+                      </div>
+                    </div>
+                  </div>
+                  <div id="map" style="width: 800px; height: 400px;"></div>
+                  {{ map | safe }}
+                  
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                    <button type="button" id="clear-points-button" class="btn btn-primary">Limpar o mapa</button>
+                  </div>
+                </form>
+                {% if gps_data.cercado %}
+                <div class="pe-5 ps-5 pb-3 d-flex justify-content-center">
+                  <form method="POST" action="{% url 'remove_cercado' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-secondary">Deletar Cercado Atual</button>
+                  </form>
+                </div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6 col-xl-3 mb-4">
+              <div class="card shadow border-start-primary py-2">
+                <div class="card-body">
+                  <div class="row align-items-center no-gutters">
+                    <div class="col me-2">
+                      <div class="text-uppercase text-primary fw-bold text-xs mb-1">
+                        <span>Distância percorrida (hoje)</span>
+                      </div>
+                      <div class="text-dark fw-bold h5 mb-0"><span>{{ todays_distance|floatformat:2 }} km</span></div>
+                    </div>
+                    <div class="col-auto"><i class="fas fa-calendar fa-2x text-gray-300"></i></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6 col-xl-3 mb-4">
+              <div class="card shadow border-start-success py-2">
+                <div class="card-body">
+                  <div class="row align-items-center no-gutters">
+                    <div class="col me-2">
+                      <div class="text-uppercase text-success fw-bold text-xs mb-1">
+                        <span>Distância percorrida (mês)</span>
+                      </div>
+                      <div class="text-dark fw-bold h5 mb-0"><span>{{ months_distance|floatformat:2 }} km</span></div>
+                    </div>
+                    <div class="col-auto"><i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6 col-xl-3 mb-4">
+              <div class="card shadow border-start-info py-2">
+                <div class="card-body">
+                  <div class="row align-items-center no-gutters">
+                    <div class="col me-2">
+                      <div class="text-uppercase text-info fw-bold text-xs mb-1">
+                        <span>Média Diária (neste mês)</span>
+                      </div>
+                      <div class="row g-0 align-items-center">
+                        <div class="col-auto">
+                          <div class="text-dark fw-bold h5 mb-0 me-3"><span>{{ avg_distance|floatformat:2 }} km</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-auto"><i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6 col-xl-3 mb-4">
+              <div class="card shadow border-start-warning py-2">
+                <div class="card-body">
+                  <div class="row align-items-center no-gutters">
+                    <div class="col me-2">
+                      <div class="text-uppercase text-warning fw-bold text-xs mb-1"><span>Movimentações Hoje</span>
+                      </div>
+                      <div class="text-dark fw-bold h5 mb-0"><span>{{ total_movements }}</span></div>
+                    </div>
+                    <div class="col-auto"><i class="fas fa-comments fa-2x text-gray-300"></i></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-lg-7 col-xl-8">
+              <div class="card shadow mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                  <h6 class="text-primary fw-bold m-0">Maiores movimentações hoje (km)</h6>
+                  <div class="dropdown no-arrow"><button class="btn btn-link btn-sm dropdown-toggle"
+                      aria-expanded="false" data-bs-toggle="dropdown" type="button"><i
+                        class="fas fa-ellipsis-v text-gray-400"></i></button>
+                    <div class="dropdown-menu shadow dropdown-menu-end animated--fade-in">
+                      <p class="text-center dropdown-header">dropdown header:</p><a class="dropdown-item"
+                        href="#">&nbsp;Action</a><a class="dropdown-item" href="#">&nbsp;Another action</a>
+                      <div class="dropdown-divider"></div><a class="dropdown-item" href="#">&nbsp;Something else
+                        here</a>
+                    </div>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <div class="chart-area">
+                    <canvas data-bss-chart="{{chart_data}}"></canvas>
+                    <!-- <canvas
+                      data-bss-chart="{&quot;type&quot;:&quot;line&quot;,&quot;data&quot;:{&quot;labels&quot;:[&quot;00:00&quot;,&quot;03:00&quot;,&quot;06:00&quot;,&quot;09:00&quot;,&quot;12:00&quot;,&quot;15:00&quot;,&quot;18:00&quot;,&quot;21:00&quot;],&quot;datasets&quot;:[{&quot;label&quot;:&quot;Earnings&quot;,&quot;fill&quot;:true,&quot;data&quot;:[&quot;0.0&quot;,&quot;0.0&quot;,&quot;3.75&quot;,&quot;1.76&quot;,&quot;0.0&quot;,&quot;1.3&quot;,&quot;4.18&quot;,&quot;0.0&quot;],&quot;backgroundColor&quot;:&quot;rgba(78, 115, 223, 0.05)&quot;,&quot;borderColor&quot;:&quot;rgba(78, 115, 223, 1)&quot;}]},&quot;options&quot;:{&quot;maintainAspectRatio&quot;:false,&quot;legend&quot;:{&quot;display&quot;:false,&quot;labels&quot;:{&quot;fontStyle&quot;:&quot;normal&quot;}},&quot;title&quot;:{&quot;fontStyle&quot;:&quot;normal&quot;},&quot;scales&quot;:{&quot;xAxes&quot;:[{&quot;gridLines&quot;:{&quot;color&quot;:&quot;rgb(234, 236, 244)&quot;,&quot;zeroLineColor&quot;:&quot;rgb(234, 236, 244)&quot;,&quot;drawBorder&quot;:false,&quot;drawTicks&quot;:false,&quot;borderDash&quot;:[&quot;2&quot;],&quot;zeroLineBorderDash&quot;:[&quot;2&quot;],&quot;drawOnChartArea&quot;:false},&quot;ticks&quot;:{&quot;fontColor&quot;:&quot;#858796&quot;,&quot;fontStyle&quot;:&quot;normal&quot;,&quot;padding&quot;:20}}],&quot;yAxes&quot;:[{&quot;gridLines&quot;:{&quot;color&quot;:&quot;rgb(234, 236, 244)&quot;,&quot;zeroLineColor&quot;:&quot;rgb(234, 236, 244)&quot;,&quot;drawBorder&quot;:false,&quot;drawTicks&quot;:false,&quot;borderDash&quot;:[&quot;2&quot;],&quot;zeroLineBorderDash&quot;:[&quot;2&quot;]},&quot;ticks&quot;:{&quot;fontColor&quot;:&quot;#858796&quot;,&quot;fontStyle&quot;:&quot;normal&quot;,&quot;padding&quot;:20}}]}}}"></canvas> -->
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-5 col-xl-4">
+              <div class="card shadow mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                  <h6 class="text-primary fw-bold m-0">Localização em Tempo Real</h6>
+                </div>
+                <div class="card-body">
+                  <div class="chart-area">
+                    <iframe id="real-time-gps" class="gps-map"
+                      src="https://maps.google.com/maps?q={{ gps_data.current_latitude }},{{ gps_data.current_longitude }}&amp;z=15&amp;output=embed"></iframe>
+                  </div>
+                  <div class="text-center small mt-4"><span class="me-2">
+                      <div class="alt">Altitude: {{gps_data.current_altitude}} m</div>
+                      <div class="alt">Speed: {{gps_data.current_speed}} km/h</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <footer class="bg-white sticky-footer">
+            <div class="container my-auto">
+              <div class="text-center my-auto copyright"><span>Copyright © GPS-Tracker 2023</span></div>
+            </div>
+          </footer>
+        </div>
+      </div>
+      <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+      <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"/>
+      <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+      <script src="{% static '/assets/bootstrap/js/bootstrap.min.js' %}"></script>
+      <script src="{% static '/assets/js/chart.min.js' %}"></script>
+      <script src="{% static '/assets/js/bs-init.js' %}"></script>
+      <script src="{% static '/assets/js/theme.js' %}"></script>
+
+      <script>
+        var clearButton = document.getElementById('clear-points-button');
+    clearButton.addEventListener('click', function() {
+        // Remove todos os marcadores do mapa
+        map.eachLayer(function (layer) {
+            if (layer instanceof L.Marker) {
+                map.removeLayer(layer);
+            }
+        });
+
+        // Limpa os campos do formulário
+        for (var i = 0; i < 4; i++) {
+            var pointFieldLat = form.querySelector(`#id_latitude${i}`);
+            var pointFieldLng = form.querySelector(`#id_longitude${i}`);
+            pointFieldLat.value = '';
+            pointFieldLng.value = '';
+        }
+
+        pointsSelected = 0; // Redefina a contagem de pontos selecionados
+    });
+
+        var map = L.map('map').setView([0, 0], 5);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+        }).addTo(map);
+
+        var form = document.getElementById('point-form');
+        var pointsSelected = 0;
+
+        map.on('click', function(e) {
+            if (pointsSelected < 4) {
+                var lat = e.latlng.lat;
+                var lng = e.latlng.lng;
+                var pointFieldLat = form.querySelector(`#id_latitude${pointsSelected}`);
+                var pointFieldLng = form.querySelector(`#id_longitude${pointsSelected}`);
+
+                // Atualize os campos do formulário
+                pointFieldLat.value = lat;
+                pointFieldLng.value = lng;
+                pointsSelected++;
+
+                // Adicione um marcador no mapa
+                var marker = L.marker([lat, lng]).addTo(map);
+            }
+        });
+    </script>
+</body>
+
+</html>

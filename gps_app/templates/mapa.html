@@ -1,0 +1,150 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Defini��o de Ceracado</title>
+    <link rel="stylesheet" href="{% static '/assets/bootstrap/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static '/assets/fonts/fontawesome-all.min.css' %}">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i&amp;display=swap">
+
+
+</head>
+
+<body id="page-top">
+    <div id="wrapper">
+        <nav class="navbar navbar-dark align-items-start sidebar sidebar-dark accordion bg-gradient-primary p-0">
+            <div class="container-fluid d-flex flex-column p-0"><a
+                    class="navbar-brand d-flex justify-content-center align-items-center sidebar-brand m-0" href="#">
+                    <div class="sidebar-brand-icon rotate-n-15"><i class="fas fa-hippo"></i></div>
+                    <div class="sidebar-brand-text mx-3"><span>GPS-Tracker</span></div>
+                </a>
+                <hr class="sidebar-divider my-0">
+                <ul class="navbar-nav text-light" id="accordionSidebar">
+                    <li class="nav-item"><a class="nav-link active" href="/"><i
+                                class="fas fa-tachometer-alt"></i><span>{{gps_data.name}}</span></a></li>
+                </ul>
+                <div class="text-center d-none d-md-inline"><button class="btn rounded-circle border-0"
+                        id="sidebarToggle" type="button"></button></div>
+            </div>
+        </nav>
+
+        <div class="d-flex flex-column" id="content-wrapper">
+            <div class="col-3 m-2">
+                <a href="{% url 'home' %}" class="btn btn-primary">Voltar</a>
+            </div>
+            <h style="border: 0.1em solid; color: rgb(148, 148, 148); margin-top: 10px;"></h>
+            <div id="map" style="width: 100%; height: 500px;"></div>
+            <div class="d-flex justify-content-center">
+                <form id="form" action="{% url 'config_cercado' %}" method="POST">
+                    {% csrf_token %}
+    
+                    <input type="hidden" name="lat1" id="lat1" value="{{gps_data.cercado.lat1}}" required="true">
+                    <input type="hidden" name="lon1" id="lon1" value="{{gps_data.cercado.lon1}}" required="true">
+    
+                    <input type="hidden" name="lat2" id="lat2" value="{{gps_data.cercado.lat2}}" required="true">
+                    <input type="hidden" name="lon2" id="lon2" value="{{gps_data.cercado.lon2}}" required="true">
+    
+                    <input type="hidden" name="lat3" id="lat3" value="{{gps_data.cercado.lat3}}" required="true">
+                    <input type="hidden" name="lon3" id="lon3" value="{{gps_data.cercado.lon3}}" required="true">
+
+                    <input type="hidden" name="lat4" id="lat4" value="{{gps_data.cercado.lat4}}" required="true">
+                    <input type="hidden" name="lon4" id="lon4" value="{{gps_data.cercado.lon4}}" required="true">
+                    <br>
+                    <label>Nome do Cercado</label>
+                    <input type="text" name="name" id="newName" class="form-control" value="{{gps_data.cercado.name}}|{{gps_data.cercado.id}}" required>
+                    <input type="hidden" name="id" value="{{gps_data.cercado.id}}" />
+                    <br>
+                    <button class="btn btn-warning" type="button" id="clear-points-button">Limpar Cercado</button>
+                    <input type="submit" class="btn btn-primary btnsave" value="Salvar Cercado" disabled>
+                </form>
+            </div>
+           
+            <h style="border: 0.1em solid; color: rgb(148, 148, 148); margin-top: 10px;"></h>
+
+        </div>
+
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+        <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+        <script src="{% static '/assets/bootstrap/js/bootstrap.min.js' %}"></script>
+        <script src="{% static '/assets/js/chart.min.js' %}"></script>
+        <script src="{% static '/assets/js/bs-init.js' %}"></script>
+        <script src="{% static '/assets/js/theme.js' %}"></script>
+
+        <script>
+            var clearButton = document.getElementById('clear-points-button');
+            clearButton.addEventListener('click', function () {
+                // Remove todos os marcadores do mapa
+                map.eachLayer(function (layer) {
+                    if (layer instanceof L.Marker) {
+                        map.removeLayer(layer);
+                    }
+                });
+
+                // Limpa os campos do formulário
+                for (var i = 1; i <= 4; i++) {
+                    var pointFieldLat = form.querySelector(`#lat${i}`);
+                    var pointFieldLng = form.querySelector(`#lon${i}`);
+                    pointFieldLat.value = '';
+                    pointFieldLng.value = '';
+                }
+
+                pointsSelected = 1; // Redefina a contagem de pontos selecionados
+                $('.btnsave').prop("disabled", true);
+            });
+
+            var map = L.map('map').setView([{{ latitude }}, {{ longitude }}], 15);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+            }).addTo(map);
+
+            var form = document.getElementById('form');
+            var pointsSelected = 1;
+            if(form.querySelector('#lat1').value != ''){
+                L.marker([form.querySelector('#lat1').value, form.querySelector('#lon1').value]).addTo(map);
+                pointsSelected += 1;
+            }
+            if(form.querySelector('#lat2').value != ''){
+                L.marker([form.querySelector('#lat2').value, form.querySelector('#lon2').value]).addTo(map);
+                pointsSelected += 1;
+            }
+            if(form.querySelector('#lat3').value != ''){
+                L.marker([form.querySelector('#lat3').value, form.querySelector('#lon3').value]).addTo(map);
+                pointsSelected += 1;
+            }
+            if(form.querySelector('#lat4').value != ''){
+                L.marker([form.querySelector('#lat4').value, form.querySelector('#lon4').value]).addTo(map);
+                pointsSelected += 1;
+                $('.btnsave').prop("disabled", false);
+            }
+           
+
+            map.on('click', function (e) {
+                if (pointsSelected <= 4) {
+                    var lat = e.latlng.lat;
+                    var lng = e.latlng.lng;
+                    var pointFieldLat = form.querySelector(`#lat${pointsSelected}`);
+                    var pointFieldLng = form.querySelector(`#lon${pointsSelected}`);
+
+                    // Atualize os campos do formulário
+                    pointFieldLat.value = lat;
+                    pointFieldLng.value = lng;
+                    pointsSelected++;
+
+                    // Adicione um marcador no mapa
+                    var marker = L.marker([lat, lng]).addTo(map);
+
+                    if(pointsSelected == 5){
+                        $('.btnsave').prop("disabled", false);
+                    }
+                }
+            });
+        </script>
+</body>
+
+</html>
