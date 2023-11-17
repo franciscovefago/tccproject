@@ -79,7 +79,7 @@ WSGI_APPLICATION = 'gpsTracker.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3bkp',
+        'NAME': BASE_DIR / 'db.sqlite',
     }
 }
 
