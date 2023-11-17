@@ -10,6 +10,7 @@ import json
 import folium
 from django.shortcuts import render
 import geocoder
+from django.views.decorators.csrf import csrf_exempt
 
 def is_inside(gps_device):
     lat = gps_device.current_latitude
@@ -43,7 +44,7 @@ def home(request):
     try:
         gps_data = GPSDevice.objects.get(id=1)
     except:
-        gps_data={'name': 'nothingfound', 'current_latitude':0, 'current_longitude':0}
+        gps_data=None
 
     total_distance = 0
     previous_point = None
@@ -83,8 +84,8 @@ def home(request):
 
     print('Distance today: '+str(total_distance))
     print('Distance this month: '+str(month_distance))
-    
-    if gps_data.cercado:
+  
+    if gps_data is not None:
         print("Cercado: ")
         print(gps_data.cercado)
 
@@ -194,11 +195,12 @@ def home(request):
 
     chart_data_json = json.dumps(chart_data)
 
-    if gps_data.current_speed > 5:
-        notify = True
+    if gps_data is not None:
+        if gps_data.current_speed > 5:
+            notify = True
 
-    if gps_data.cercado:
-        inside = is_inside(gps_data)
+        if gps_data.cercado:
+            inside = is_inside(gps_data)
 
     todays_day = datetime.today().day
 
@@ -221,14 +223,18 @@ def table(request):
     return render(request, 'table.html')
 
 @api_view(['POST'])
+#@csrf_exempt
 def gps_coordinates(request):
+    print(request.data)
+    
     latitude = request.data.get('latitude')
     longitude = request.data.get("longitude")
     altitude = request.data.get('altitude')
     speed = request.data.get('speed')
-    counter = request.data.get('counter')
-
+    counter = int(request.data.get('counter'))
+    
     # margem de erro do gps
+    speed = float(speed)
     if speed < 0.99:
         speed = 0
 
@@ -236,23 +242,22 @@ def gps_coordinates(request):
     print(longitude)
 
     print(counter)
-
-    print('Counter % 10 = 0? '+str(counter%10 == 0)+' it is '+str(counter%10))
-
+ 
     try:
         gps_data = GPSDevice.objects.get(id=1)
+        print(gps_data)
         print("Updating GPSDevice's data...")
         # Every 10 new received information, a new data of location is saved.
         if counter % 10 == 0:
             try:
-                new_past_location = PreviousLocation(latitude = latitude, longitude = longitude, timestamp = gps_data.last_updated, device_id = gps_data)
-                new_past_location.save()
+                # new_past_location = PreviousLocation(latitude = latitude, longitude = longitude, timestamp = gps_data.last_updated, device_id = gps_data)
+                # new_past_location.save()
                 print('New past location added to database.')
             except Exception as e:
                 print(e)
                 print("Could not register previous location.")
     except:
-        gps_data = GPSDevice(name='Nameless GPS', current_latitude=latitude, current_longitude=longitude, current_altitude=altitude, current_speed=speed)
+        gps_data = GPSDevice(id=1, last_updated= datetime.now(), name='Nameless GPS', current_latitude=latitude, current_longitude=longitude, current_altitude=altitude, current_speed=speed)
         print("Device Not Found. Creating new on Database.")
         
     today = date.today()
@@ -291,12 +296,23 @@ def gps_data_list(request):
 
 def update_device_name(request):
     device = GPSDevice.objects.get(id=1)
-    new_name = request.POST.get('name')
-
-    device.name = new_name
-    device.save()
+    if device:
+        new_name = request.POST.get('name')
+        device.name = new_name
+        device.save()
 
     return redirect('/')
+
+def update_cercado_to_device(request):
+    cercadoid = request.GET.get('cercadoid')
+    deviceid = request.GET.get('deviceid')
+
+    device = GPSDevice.objects.get(id=deviceid)
+    cercado = Cercado.objects.get(id=cercadoid)
+    device.cercado = cercado
+    
+    device.save()
+    return redirect('/mapa')
 
 def config_cercado(request):
     device = GPSDevice.objects.get(id=1)
@@ -354,7 +370,9 @@ def mapa(request):
     if gps_data.cercado and gps_data.cercado.lon1 is not None:
         longitude = gps_data.cercado.lon1
 
-    return render(request, 'mapa.html', {'gps_data': gps_data, 'form': '', 'latitude':latitude, 'longitude': longitude })
+    cercados = Cercado.objects.all()
+
+    return render(request, 'mapa.html', {'gps_data': gps_data, 'cercados': cercados, 'form': '', 'latitude':latitude, 'longitude': longitude })
 
 
 def example(request):
