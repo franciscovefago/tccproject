@@ -95,96 +95,7 @@
               </div>
             </div>
           </div>
-          <div class="modal fade" id="cercadoModal" tabindex="-1" role="dialog" aria-labelledby="cercadoModal"
-            aria-hidden="true">
-            <div class="modal-dialog modal-lg" role="document">
-              <div class="modal-content modal-lg">
-                <div class="modal-header">
-                  <h5 class="modal-title" id="changeNameModalLabel">Configure um novo Cercado Virtual</h5>
-                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
-                  </button>
-                </div>
-                <form id="changeNameForm" action="{% url 'config_cercado' %}" method="POST">
-                  {% csrf_token %}
-                  <div class="modal-body">
-                    <div class="name-input mb-4">
-                      <label for="newName">Nome do cercado:</label>
-                      <input type="text" name="name" id="newName" class="form-control" value="{{gps_data.cercado.name}}|{{gps_data.cercado.id}}" required>
-                      <input type="hidden" name="id" value="{{gps_data.cercado.id}}" />
-                    </div>
-                    <div>Coordenadas do ponto 1:</div>
-                    <div class="d-flex mb-4" style="gap:1.5rem;">
-                      <div class="input">
-                        <label for="lat1">Latitude:</label>
-                        <input type="text" name="lat1" id="lat1" class="form-control" value="{{gps_data.cercado.lat1}}"
-                          required>
-                      </div>
-                      <div class="input">
-                        <label for="lon1">Longitude:</label>
-                        <input type="text" name="lon1" id="lon1" class="form-control" value="{{gps_data.cercado.lon1}}"
-                          required>
-                      </div>
-                    </div>
-                    <div>Coordenadas do ponto 2:</div>
-                    <div class="d-flex mb-4" style="gap:1.5rem;">
-                      <div class="input">
-                        <label for="lat2">Latitude:</label>
-                        <input type="text" name="lat2" id="lat2" class="form-control" value="{{gps_data.cercado.lat2}}"
-                          required>
-                      </div>
-                      <div class="input">
-                        <label for="lon2">Longitude:</label>
-                        <input type="text" name="lon2" id="lon2" class="form-control" value="{{gps_data.cercado.lon2}}"
-                          required>
-                      </div>
-                    </div>
-                    <div>Coordenadas do ponto 3:</div>
-                    <div class="d-flex mb-4" style="gap:1.5rem;">
-                      <div class="input">
-                        <label for="lat3">Latitude:</label>
-                        <input type="text" name="lat3" id="lat3" class="form-control" value="{{gps_data.cercado.lat3}}"
-                          required>
-                      </div>
-                      <div class="input">
-                        <label for="lon3">Longitude:</label>
-                        <input type="text" name="lon3" id="lon3" class="form-control" value="{{gps_data.cercado.lon3}}"
-                          required>
-                      </div>
-                    </div>
-                    <div>Coordenadas do ponto 4:</div>
-                    <div class="d-flex mb-4" style="gap:1.5rem;">
-                      <div class="input">
-                        <label for="lat4">Latitude:</label>
-                        <input type="text" name="lat4" id="lat4" class="form-control" value="{{gps_data.cercado.lat4}}"
-                          required>
-                      </div>
-                      <div class="input">
-                        <label for="lat4">Longitude:</label>
-                        <input type="text" name="lon4" id="lon4" class="form-control" value="{{gps_data.cercado.lon4}}"
-                          required>
-                      </div>
-                    </div>
-                  </div>
-                  <div id="map" style="width: 800px; height: 400px;"></div>
-                  {{ map | safe }}
-                  
-                  <div class="modal-footer">
-                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Salvar</button>
-                    <button type="button" id="clear-points-button" class="btn btn-primary">Limpar o mapa</button>
-                  </div>
-                </form>
-                {% if gps_data.cercado %}
-                <div class="pe-5 ps-5 pb-3 d-flex justify-content-center">
-                  <form method="POST" action="{% url 'remove_cercado' %}">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-secondary">Deletar Cercado Atual</button>
-                  </form>
-                </div>
-                {% endif %}
-              </div>
-            </div>
-          </div>
+        
           <div class="row">
             <div class="col-md-6 col-xl-3 mb-4">
               <div class="card shadow border-start-primary py-2">
@@ -254,31 +165,24 @@
             </div>
           </div>
           <div class="row">
-            <div class="col-lg-7 col-xl-8">
+            <div class="col-lg-12 col-xl-12">
               <div class="card shadow mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                  <h6 class="text-primary fw-bold m-0">Maiores movimentações hoje (km)</h6>
-                  <div class="dropdown no-arrow"><button class="btn btn-link btn-sm dropdown-toggle"
-                      aria-expanded="false" data-bs-toggle="dropdown" type="button"><i
-                        class="fas fa-ellipsis-v text-gray-400"></i></button>
-                    <div class="dropdown-menu shadow dropdown-menu-end animated--fade-in">
-                      <p class="text-center dropdown-header">dropdown header:</p><a class="dropdown-item"
-                        href="#">&nbsp;Action</a><a class="dropdown-item" href="#">&nbsp;Another action</a>
-                      <div class="dropdown-divider"></div><a class="dropdown-item" href="#">&nbsp;Something else
-                        here</a>
-                    </div>
+                  <h6 class="text-primary fw-bold m-0">Movimentações de hoje</h6>
+                  <div class="dropdown no-arrow">
                   </div>
                 </div>
                 <div class="card-body">
                   <div class="chart-area">
-                    <canvas data-bss-chart="{{chart_data}}"></canvas>
+                    <!-- <canvas data-bss-chart="{{chart_data}}"></canvas> -->
+                    {{ mapa_html|safe }}
                     <!-- <canvas
                       data-bss-chart="{&quot;type&quot;:&quot;line&quot;,&quot;data&quot;:{&quot;labels&quot;:[&quot;00:00&quot;,&quot;03:00&quot;,&quot;06:00&quot;,&quot;09:00&quot;,&quot;12:00&quot;,&quot;15:00&quot;,&quot;18:00&quot;,&quot;21:00&quot;],&quot;datasets&quot;:[{&quot;label&quot;:&quot;Earnings&quot;,&quot;fill&quot;:true,&quot;data&quot;:[&quot;0.0&quot;,&quot;0.0&quot;,&quot;3.75&quot;,&quot;1.76&quot;,&quot;0.0&quot;,&quot;1.3&quot;,&quot;4.18&quot;,&quot;0.0&quot;],&quot;backgroundColor&quot;:&quot;rgba(78, 115, 223, 0.05)&quot;,&quot;borderColor&quot;:&quot;rgba(78, 115, 223, 1)&quot;}]},&quot;options&quot;:{&quot;maintainAspectRatio&quot;:false,&quot;legend&quot;:{&quot;display&quot;:false,&quot;labels&quot;:{&quot;fontStyle&quot;:&quot;normal&quot;}},&quot;title&quot;:{&quot;fontStyle&quot;:&quot;normal&quot;},&quot;scales&quot;:{&quot;xAxes&quot;:[{&quot;gridLines&quot;:{&quot;color&quot;:&quot;rgb(234, 236, 244)&quot;,&quot;zeroLineColor&quot;:&quot;rgb(234, 236, 244)&quot;,&quot;drawBorder&quot;:false,&quot;drawTicks&quot;:false,&quot;borderDash&quot;:[&quot;2&quot;],&quot;zeroLineBorderDash&quot;:[&quot;2&quot;],&quot;drawOnChartArea&quot;:false},&quot;ticks&quot;:{&quot;fontColor&quot;:&quot;#858796&quot;,&quot;fontStyle&quot;:&quot;normal&quot;,&quot;padding&quot;:20}}],&quot;yAxes&quot;:[{&quot;gridLines&quot;:{&quot;color&quot;:&quot;rgb(234, 236, 244)&quot;,&quot;zeroLineColor&quot;:&quot;rgb(234, 236, 244)&quot;,&quot;drawBorder&quot;:false,&quot;drawTicks&quot;:false,&quot;borderDash&quot;:[&quot;2&quot;],&quot;zeroLineBorderDash&quot;:[&quot;2&quot;]},&quot;ticks&quot;:{&quot;fontColor&quot;:&quot;#858796&quot;,&quot;fontStyle&quot;:&quot;normal&quot;,&quot;padding&quot;:20}}]}}}"></canvas> -->
                   </div>
                 </div>
               </div>
             </div>
-            <div class="col-lg-5 col-xl-4">
+            <div class="col-lg-5 col-xl-4" style="display: none;">
               <div class="card shadow mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
                   <h6 class="text-primary fw-bold m-0">Localização em Tempo Real</h6>
@@ -303,61 +207,13 @@
           </footer>
         </div>
       </div>
-      <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-      <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"/>
-      <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 
       <script src="{% static '/assets/bootstrap/js/bootstrap.min.js' %}"></script>
       <script src="{% static '/assets/js/chart.min.js' %}"></script>
       <script src="{% static '/assets/js/bs-init.js' %}"></script>
       <script src="{% static '/assets/js/theme.js' %}"></script>
 
-      <script>
-        var clearButton = document.getElementById('clear-points-button');
-    clearButton.addEventListener('click', function() {
-        // Remove todos os marcadores do mapa
-        map.eachLayer(function (layer) {
-            if (layer instanceof L.Marker) {
-                map.removeLayer(layer);
-            }
-        });
 
-        // Limpa os campos do formulário
-        for (var i = 0; i < 4; i++) {
-            var pointFieldLat = form.querySelector(`#id_latitude${i}`);
-            var pointFieldLng = form.querySelector(`#id_longitude${i}`);
-            pointFieldLat.value = '';
-            pointFieldLng.value = '';
-        }
-
-        pointsSelected = 0; // Redefina a contagem de pontos selecionados
-    });
-
-        var map = L.map('map').setView([0, 0], 5);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-        }).addTo(map);
-
-        var form = document.getElementById('point-form');
-        var pointsSelected = 0;
-
-        map.on('click', function(e) {
-            if (pointsSelected < 4) {
-                var lat = e.latlng.lat;
-                var lng = e.latlng.lng;
-                var pointFieldLat = form.querySelector(`#id_latitude${pointsSelected}`);
-                var pointFieldLng = form.querySelector(`#id_longitude${pointsSelected}`);
-
-                // Atualize os campos do formulário
-                pointFieldLat.value = lat;
-                pointFieldLng.value = lng;
-                pointsSelected++;
-
-                // Adicione um marcador no mapa
-                var marker = L.marker([lat, lng]).addTo(map);
-            }
-        });
-    </script>
 </body>
 
 </html>

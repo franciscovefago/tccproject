@@ -95,105 +95,6 @@ def home(request):
         Q(start_time__month=today.month) &
         Q(start_time__day=today.day)).order_by('start_time')
 
-    # graph values:
-
-    distances_today = []
-    i = 0
-    while i < 22:
-        start_time = time(i, 0)
-        if i+3 == 24:
-            end_time = time(i+2, 0)
-        else:
-            end_time = time(i+3, 0)
-
-        start_datetime = datetime.combine(today, start_time)
-        end_datetime = datetime.combine(today, end_time)
-
-        current_coordinates = PreviousLocation.objects.filter(
-            Q(timestamp__gte=start_datetime) &
-            Q(timestamp__lt=end_datetime)).order_by('timestamp')
-        
-        this_period_distance = 0
-
-        if current_coordinates:        
-            current_distance = 0
-
-            for coordinate in current_coordinates:
-                current_point = Point(float(coordinate.longitude), float(coordinate.latitude))
-
-                if previous_point:
-                    current_distance = previous_point.distance(current_point)
-                    this_period_distance += current_distance
-
-                previous_point = current_point
-
-        distances_today.append(float(this_period_distance))
-
-        i += 3
-    
-    print('Distance per 3 hour: '+str(distances_today))
-
-    chart_labels = ["00:00", "03:00", "06:00", "09:00", "12:00", "15:00", "18:00", "21:00"]
-    chart_data = {
-        "type": "line",
-        "data": {
-            "labels": chart_labels,
-            "datasets": [{
-                "label": "Earnings",
-                "fill": True,
-                "data": distances_today,
-                "backgroundColor": "rgba(78, 115, 223, 0.05)",
-                "borderColor": "rgba(78, 115, 223, 1)"
-            }]
-        },
-        "options": {
-            "maintainAspectRatio": False,
-            "legend": {
-                "display": False,
-                "labels": {
-                    "fontStyle": "normal"
-                }
-            },
-            "title": {
-                "fontStyle": "normal"
-            },
-            "scales": {
-                "xAxes": [{
-                    "gridLines": {
-                        "color": "rgb(234, 236, 244)",
-                        "zeroLineColor": "rgb(234, 236, 244)",
-                        "drawBorder": False,
-                        "drawTicks": False,
-                        "borderDash": ["2"],
-                        "zeroLineBorderDash": ["2"],
-                        "drawOnChartArea": False
-                    },
-                    "ticks": {
-                        "fontColor": "#858796",
-                        "fontStyle": "normal",
-                        "padding": 20
-                    }
-                }],
-                "yAxes": [{
-                    "gridLines": {
-                        "color": "rgb(234, 236, 244)",
-                        "zeroLineColor": "rgb(234, 236, 244)",
-                        "drawBorder": False,
-                        "drawTicks": False,
-                        "borderDash": ["2"],
-                        "zeroLineBorderDash": ["2"]
-                    },
-                    "ticks": {
-                        "fontColor": "#858796",
-                        "fontStyle": "normal",
-                        "padding": 20
-                    }
-                }]
-            }
-        }
-    }
-
-    chart_data_json = json.dumps(chart_data)
 
     if gps_data is not None:
         if gps_data.current_speed > 5:
@@ -206,9 +107,34 @@ def home(request):
 
     avg_distance = month_distance/todays_day
 
-    m = folium.Map(location=[0, 0], zoom_start=5)
+    if gps_data.cercado is not None:
+        ponto1 = (gps_data.cercado.lat1, gps_data.cercado.lon1) 
+        ponto2 = (gps_data.cercado.lat2, gps_data.cercado.lon2) 
+        ponto3 = (gps_data.cercado.lat3, gps_data.cercado.lon3) 
+        ponto4 = (gps_data.cercado.lat4, gps_data.cercado.lon4)
 
-    return render(request, 'index.html', {'gps_data': gps_data, 'todays_distance': total_distance, 'months_distance': month_distance, 'gps_locations_today': coordinates, 'total_movements': len(movements), 'distance_per_time': distances_today, 'chart_data': chart_data_json, 'notify': notify, 'avg_distance': avg_distance, 'inside': inside, 'map': m})
+        m = folium.Map(location=ponto1, zoom_start=15)
+    
+        Previous = PreviousLocation.objects.all()
+
+        marker_locations = []
+        for Previou in Previous:
+            folium.Marker(location=[Previou.latitude, Previou.longitude], popup='').add_to(m)
+            marker_locations.append([Previou.latitude, Previou.longitude])
+
+        folium.PolyLine(locations=marker_locations, color='blue').add_to(m)
+
+        
+        folium.Polygon(locations=[ponto1, ponto2, ponto3, ponto4, ponto1], color='blue', fill=True, fill_color='blue', fill_opacity=0.2).add_to(m)
+
+        mapa_html = m._repr_html_()
+    else:
+        g = geocoder.ip('me')
+        latitude, longitude = g.latlng
+        m = folium.Map(location=[latitude, longitude], zoom_start=15)
+        mapa_html = m._repr_html_()
+    
+    return render(request, 'index.html', {'mapa_html': mapa_html, 'gps_data': gps_data, 'todays_distance': total_distance, 'months_distance': month_distance, 'gps_locations_today': coordinates, 'total_movements': len(movements), 'notify': notify, 'avg_distance': avg_distance, 'inside': inside, 'map': m})
 
 def login(request):
     return render(request, 'login.html')
@@ -250,8 +176,8 @@ def gps_coordinates(request):
         # Every 10 new received information, a new data of location is saved.
         if counter % 10 == 0:
             try:
-                # new_past_location = PreviousLocation(latitude = latitude, longitude = longitude, timestamp = gps_data.last_updated, device_id = gps_data)
-                # new_past_location.save()
+                new_past_location = PreviousLocation(latitude = latitude, longitude = longitude, timestamp = gps_data.last_updated, device_id = gps_data)
+                new_past_location.save()
                 print('New past location added to database.')
             except Exception as e:
                 print(e)
@@ -347,13 +273,13 @@ def config_cercado(request):
     return redirect('/mapa')
 
 def remove_cercado(request):
-    gps_device = GPSDevice.objects.get(id=1)
+    cercadoid = request.GET.get('cercadoid')
 
-    # Remove the cercado association by setting it to None
-    gps_device.cercado = None
-    gps_device.save()
+    cercado = Cercado.objects.get(id=cercadoid)
 
-    return redirect('/')
+    cercado.delete()
+
+    return redirect('/mapa')
 
 def mapa(request):
     try:
@@ -370,9 +296,31 @@ def mapa(request):
     if gps_data.cercado and gps_data.cercado.lon1 is not None:
         longitude = gps_data.cercado.lon1
 
-    cercados = Cercado.objects.all()
+    cercados = Cercado.objects.exclude(id=gps_data.cercado.id).order_by('name')
 
-    return render(request, 'mapa.html', {'gps_data': gps_data, 'cercados': cercados, 'form': '', 'latitude':latitude, 'longitude': longitude })
+    mapas = []
+
+    for cercado in cercados:
+        ponto1 = (cercado.lat1, cercado.lon1) 
+        ponto2 = (cercado.lat2, cercado.lon2) 
+        ponto3 = (cercado.lat3, cercado.lon3) 
+        ponto4 = (cercado.lat4, cercado.lon4)
+
+        # Criar um mapa centrado em uma das coordenadas (por exemplo, S�o Paulo)
+        mapa_cercado = folium.Map(location=ponto1, zoom_start=14)
+
+        # Adicionar um pol�gono (quadrado) ao mapa usando os quatro pontos
+        folium.Polygon(locations=[ponto1, ponto2, ponto3, ponto4, ponto1], color='blue', fill=True, fill_color='blue', fill_opacity=0.2).add_to(mapa_cercado)
+
+        # # Adicionar marcadores para os quatro pontos
+        # folium.Marker(location=ponto1, popup='Ponto 1').add_to(mapa_cercado)
+        # folium.Marker(location=ponto2, popup='Ponto 2').add_to(mapa_cercado)
+        # folium.Marker(location=ponto3, popup='Ponto 3').add_to(mapa_cercado)
+        # folium.Marker(location=ponto4, popup='Ponto 4').add_to(mapa_cercado)
+        
+        mapas.append({'cercado': cercado, 'mapa': mapa_cercado._repr_html_()})
+
+    return render(request, 'mapa.html', {'gps_data': gps_data,'mapas': mapas, 'cercados': cercados, 'form': '', 'latitude':latitude, 'longitude': longitude })
 
 
 def example(request):

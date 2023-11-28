@@ -5,7 +5,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
-    <title>Defini��o de Ceracado</title>
+    <title>Cercados</title>
     <link rel="stylesheet" href="{% static '/assets/bootstrap/css/bootstrap.min.css' %}">
     <link rel="stylesheet" href="{% static '/assets/fonts/fontawesome-all.min.css' %}">
     <link rel="stylesheet"
@@ -91,9 +91,10 @@
         </div>
 
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-        <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-        <script src="https://unpkg.com/leaflet-editable"></script>
+        <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+        <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+        <link rel="stylesheet" href="https://unpkg.com/leaflet-draw/dist/leaflet.draw.css" />
+        <script src="https://unpkg.com/leaflet-draw"></script>
 
         <script src="{% static '/assets/bootstrap/js/bootstrap.min.js' %}"></script>
         <script src="{% static '/assets/js/chart.min.js' %}"></script>
@@ -123,52 +124,79 @@
             });
 
             var map = L.map('map').setView([{{ latitude }}, {{ longitude }}], 15);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-            }).addTo(map);
-            var editableLayers = new L.FeatureGroup();
-            map.addLayer(editableLayers);
-            var form = document.getElementById('form');
-            var pointsSelected = 1;
-            if(form.querySelector('#lat1').value != ''){
-                L.marker([form.querySelector('#lat1').value, form.querySelector('#lon1').value]).addTo(map);
-                pointsSelected += 1;
-            }
-            if(form.querySelector('#lat2').value != ''){
-                L.marker([form.querySelector('#lat2').value, form.querySelector('#lon2').value]).addTo(map);
-                pointsSelected += 1;
-            }
-            if(form.querySelector('#lat3').value != ''){
-                L.marker([form.querySelector('#lat3').value, form.querySelector('#lon3').value]).addTo(map);
-                pointsSelected += 1;
-            }
-            if(form.querySelector('#lat4').value != ''){
-                L.marker([form.querySelector('#lat4').value, form.querySelector('#lon4').value]).addTo(map);
-                pointsSelected += 1;
-                $('.btnsave').prop("disabled", false);
-            }
-           
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+}).addTo(map);
 
-            map.on('click', function (e) {
-                if (pointsSelected <= 4) {
-                    var lat = e.latlng.lat;
-                    var lng = e.latlng.lng;
-                    var pointFieldLat = form.querySelector(`#lat${pointsSelected}`);
-                    var pointFieldLng = form.querySelector(`#lon${pointsSelected}`);
+// Adicione uma camada para desenho ao mapa
+var drawnItems = new L.FeatureGroup();
+map.addLayer(drawnItems);
 
-                    // Atualize os campos do formulário
-                    pointFieldLat.value = lat;
-                    pointFieldLng.value = lng;
-                    pointsSelected++;
+var form = document.getElementById('form');
+var pointsSelected = 0;
 
-                    // Adicione um marcador no mapa
-                    var marker = L.marker([lat, lng]).addTo(map);
+// Adicione a camada de desenho ao mapa
+map.addLayer(drawnItems);
 
-                    if(pointsSelected == 5){
-                        $('.btnsave').prop("disabled", false);
-                    }
-                }
-            });
+// Ative o controle de desenho
+var drawControl = new L.Control.Draw({
+    
+    draw: {
+        polygon: {
+            allowIntersection: false,
+            showArea: true,
+            shapeOptions: {
+                maxPoints: 4  // Defina o número máximo de pontos para o polígono
+            }
+        },
+        marker: false,
+        circlemarker: false,
+        rectangle: false,
+        circle: false,
+        polyline: false
+    }
+});
+map.addControl(drawControl);
+
+map.on('draw:drawvertex', function (e) {
+    alert('clicou')
+    // pointsSelected = e.layer.getLatLngs();
+    
+    // if (pointsSelected < 4) {
+    //     alert('Selecione mais pontos para formar um polígono com 4 vértices.');
+    // } else if (pointsSelected > 4) {
+    //     alert('Remova pontos extras para formar um polígono com 4 vértices.');
+    // }
+});
+
+map.on('draw:created', function (e) {
+    alert('eu')
+    var layer = e.layer;
+
+    // Verifique se o polígono tem exatamente 4 pontos
+    if (layer.getLatLngs()[0].length !== 4) {
+        alert('O polígono deve ter exatamente 4 pontos. Redesenhe o polígono.');
+        drawnItems.removeLayer(layer);
+    } else {
+        drawnItems.addLayer(layer);
+
+        // Atualize os campos do formulário
+        var latlngs = layer.getLatLngs()[0];
+        for (var i = 0; i < latlngs.length; i++) {
+            var pointFieldLat = form.querySelector(`#lat${i + 1}`);
+            var pointFieldLng = form.querySelector(`#lon${i + 1}`);
+
+            pointFieldLat.value = latlngs[i].lat;
+            pointFieldLng.value = latlngs[i].lng;
+        }
+
+        // Ativar automaticamente o botão de finish
+        $('.leaflet-draw-draw-polygon').click();
+
+        $('.btnsave').prop("disabled", false);
+    }
+});
+
         </script>
 </body>
 
