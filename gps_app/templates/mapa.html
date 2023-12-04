@@ -42,24 +42,29 @@
                 <form id="form" action="{% url 'config_cercado' %}" method="POST">
                     {% csrf_token %}
     
-                    <input type="text" name="lat1" id="lat1" value="{{gps_data.cercado.lat1}}" required="true">
-                    <input type="text" name="lon1" id="lon1" value="{{gps_data.cercado.lon1}}" required="true">
+                    <input type="hidden" name="lat1" id="lat1" value="{{gps_data.cercado.lat1}}" required="true">
+                    <input type="hidden" name="lon1" id="lon1" value="{{gps_data.cercado.lon1}}" required="true">
     
-                    <input type="text" name="lat2" id="lat2" value="{{gps_data.cercado.lat2}}" required="true">
-                    <input type="text" name="lon2" id="lon2" value="{{gps_data.cercado.lon2}}" required="true">
+                    <input type="hidden" name="lat2" id="lat2" value="{{gps_data.cercado.lat2}}" required="true">
+                    <input type="hidden" name="lon2" id="lon2" value="{{gps_data.cercado.lon2}}" required="true">
     
-                    <input type="text" name="lat3" id="lat3" value="{{gps_data.cercado.lat3}}" required="true">
-                    <input type="text" name="lon3" id="lon3" value="{{gps_data.cercado.lon3}}" required="true">
+                    <input type="hidden" name="lat3" id="lat3" value="{{gps_data.cercado.lat3}}" required="true">
+                    <input type="hidden" name="lon3" id="lon3" value="{{gps_data.cercado.lon3}}" required="true">
 
-                    <input type="text" name="lat4" id="lat4" value="{{gps_data.cercado.lat4}}" required="true">
-                    <input type="text" name="lon4" id="lon4" value="{{gps_data.cercado.lon4}}" required="true">
+                    <input type="hidden" name="lat4" id="lat4" value="{{gps_data.cercado.lat4}}" required="true">
+                    <input type="hidden" name="lon4" id="lon4" value="{{gps_data.cercado.lon4}}" required="true">
                     <br>
                     
                     <label class="form-label">Nome do Cercado</label>
                     <input type="text" name="name" id="newName" class="form-control form-control-sm" value="{{gps_data.cercado.name}}" required>
-                    <input type="hidden" name="id" value="{{gps_data.cercado.id}}" />
+                    <input type="hidden" name="id" id="idcercado" value="{{gps_data.cercado.id}}" />
                     <div class="mt-3">
+                        <div class="col-12">
+                            <input type="checkbox" id="checknewandedit" label="Criar novo cercado?"/>
+                            <label> Criar novo cercado?</label>
+                        </div>
                         <button class="btn btn-warning btn-sm" type="button" id="clear-points-button">Limpar Cercado</button>
+                        
                         <input type="submit" class="btn btn-primary btnsave btn-sm" value="Salvar Cercado" disabled>
                     </div>
                     
@@ -101,6 +106,15 @@
         <script src="{% static '/assets/js/theme.js' %}"></script>
 
         <script>
+
+            $('#checknewandedit').change(function() {
+                var checkbox = document.getElementById('checknewandedit');
+                if (checkbox.checked) {
+                    $('#idcercado').val('');
+                    $('#checknewandedit').prop('disabled', true);
+                }
+            });
+
             var clearButton = document.getElementById('clear-points-button');
             clearButton.addEventListener('click', function () {
                 // Remove todos os marcadores do mapa
