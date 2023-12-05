@@ -119,10 +119,12 @@ def home(request):
 
         marker_locations = []
         for Previou in Previous:
-            folium.Marker(location=[Previou.latitude, Previou.longitude], popup='').add_to(m)
-            marker_locations.append([Previou.latitude, Previou.longitude])
-
-        folium.PolyLine(locations=marker_locations, color='blue').add_to(m)
+            if Previou.latitude != 0.000000:
+                folium.Marker(location=[Previou.latitude, Previou.longitude], popup='').add_to(m)
+                marker_locations.append([Previou.latitude, Previou.longitude])
+            
+        if len(marker_locations) > 0:
+            folium.PolyLine(locations=marker_locations, color='blue').add_to(m)
 
         
         folium.Polygon(locations=[ponto1, ponto2, ponto3, ponto4, ponto1], color='blue', fill=True, fill_color='blue', fill_opacity=0.2).add_to(m)
